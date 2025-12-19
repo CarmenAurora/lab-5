@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA_OPERACIONAL_V1.2</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a; /* Cor do fundo */
+            background-image: radial-gradient(#222 10%, transparent 10%); /* Efeito de textura */
+            background-size: 20px 20px;
+            font-family: 'Tahoma', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ÍCONES NO DESKTOP */
+        .desktop {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 100px);
+            grid-gap: 20px;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        .icon {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .icon img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+            transition: filter 0.2s;
+        }
+
+        .icon:hover img {
+            filter: brightness(1.5);
+        }
+
+        /* JANELA DO SISTEMA */
+        .window {
+            position: absolute;
+            width: 400px;
+            height: 300px;
+            background: #c0c0c0; /* Estilo cinza clássico */
+            border: 2px solid #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            display: none; /* Começa escondida */
+            z-index: 10;
+        }
+
+        .title-bar {
+            background: #000080; /* Azul clássico de janela */
+            color: white;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            cursor: move;
+        }
+
+        .close-btn {
+            background: #c0c0c0;
+            color: black;
+            border: 1px solid #fff;
+            border-right-color: #444;
+            border-bottom-color: #444;
+            padding: 2px 5px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .window-content {
+            padding: 15px;
+            color: black;
+            overflow-y: auto;
+            height: calc(100% - 40px);
+        }
+
+        /* BARRA DE TAREFAS */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div class="desktop">
+    <div class="icon" onclick="openWindow('win-readme')">
+        <img src="https://cdn-icons-png.flaticon.com/512/2991/2991108.png" alt="folder">
+        <span>LEIA_ME.txt</span>
+    </div>
+
+    <div class="icon" onclick="openWindow('win-secret')">
+        <img src="https://cdn-icons-png.flaticon.com/512/1012/1012658.png" alt="folder">
+        <span>DIARIO_01</span>
+    </div>
+</div>
+
+<div id="win-readme" class="window" style="top: 100px; left: 100px;">
+    <div class="title-bar">
+        <span>Bloco de Notas</span>
+        <button class="close-btn" onclick="closeWindow('win-readme')">X</button>
+    </div>
+    <div class="window-content">
+        <p><b>LOG_ID: 9921</b></p>
+        <p>Se você está lendo isso, a Carmen já deve ter infectado o servidor Aurora.</p>
+        <p>Não confie nas notificações de sistema.</p>
+    </div>
+</div>
+
+<div id="win-secret" class="window" style="top: 150px; left: 200px;">
+    <div class="title-bar">
+        <span>Visualizador de Texto</span>
+        <button class="close-btn" onclick="closeWindow('win-secret')">X</button>
+    </div>
+    <div class="window-content">
+        <p><i>12 de Outubro - 1996</i></p>
+        <p>Eles acham que desligaram o projeto. Mas o código continua respirando...</p>
+    </div>
+</div>
+
+<div class="taskbar">
+    <button style="font-weight: bold;">START</button>
+</div>
+
+<script>
+    function openWindow(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function closeWindow(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // Código básico para permitir arrastar as janelas (opcional)
+    // Para um ARG simples, apenas abrir e fechar já funciona muito bem!
+</script>
+
+</body>
+</html>
