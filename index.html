@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA_AURORA_DESKTOP</title>
+    <style>
+        body { margin: 0; padding: 0; background: #050000; overflow: hidden; height: 100vh; font-family: 'Courier New', monospace; }
+
+        /* ESTÁTICA */
+        #noiseCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: 2; pointer-events: none; }
+
+        /* O OLHO GIGANTE PIXELADO HORIZONTAL */
+        #eye-container {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80vw; height: 40vh; /* Ocupa quase a tela toda */
+            display: flex; align-items: center; justify-content: center; z-index: 0;
+        }
+
+        #pixel-eye {
+            width: 100%; height: 100%;
+            background: #400; /* Vermelho escuro profundo */
+            border-radius: 100% 0%; /* Formato amendoado horizontal */
+            transform: rotate(-45deg); /* Ajuste para ficar horizontal */
+            box-shadow: 
+                0 0 0 10px #600, 
+                0 0 80px 20px rgba(255, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            border: 8px solid #200;
+        }
+
+        /* PUPILA PIXELADA ENCARANDO */
+        #pupil {
+            position: absolute;
+            width: 15%; height: 30%;
+            background: #000;
+            top: 35%; left: 35%;
+            transform: rotate(45deg); /* Compensa a rotação do olho */
+            box-shadow: 0 0 20px 5px red;
+            animation: lookAround 10s infinite;
+        }
+
+        /* ANIMAÇÃO DE GLITCH (1 MINUTO) */
+        .glitch-mode { animation: flash 0.2s steps(1) infinite; }
+        @keyframes flash {
+            0% { filter: invert(1) hue-rotate(90deg); transform: translate(-50%, -50%) scale(1.1); }
+            50% { filter: contrast(500%) brightness(2); transform: translate(-49%, -51%) scale(1.2) skewX(20deg); }
+            100% { filter: none; }
+        }
+
+        @keyframes lookAround {
+            0%, 100% { transform: rotate(45deg) translate(0, 0); }
+            10%, 15% { transform: rotate(45deg) translate(10px, -5px); }
+            30%, 35% { transform: rotate(45deg) translate(-10px, 5px); }
+        }
+
+        /* DESKTOP E INTERFACE */
+        .desktop { position: relative; z-index: 10; display: grid; grid-template-columns: repeat(auto-fill, 110px); grid-gap: 20px; padding: 30px; }
+        .icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #ff0000; text-align: center; font-size: 11px; font-weight: bold; }
+        .window { position: absolute; width: 300px; background: #222; border: 2px solid red; display: none; z-index: 100; color: #ff4444; box-shadow: 10px 10px 0 #000; }
+        .title-bar { background: red; color: black; padding: 4px; font-weight: bold; display: flex; justify-content: space-between; font-size: 10px; }
+        .close-btn { background: black; color: red; border: 1px solid red; cursor: pointer; }
+   
+
+
+.window-content::-webkit-scrollbar {
+    width: 15px;
+}
+.window-content::-webkit-scrollbar-track {
+    background: #808080;
+}
+.window-content::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border: 2px solid #fff;
+    border-right-color: #444;
+    border-bottom-color: #444;
+}
+
+
+
+
+
+ </style>
+</head>
+
+<body>
+    <canvas id="noiseCanvas"></canvas>
+
+    <div id="eye-container">
+        <div id="pixel-eye">
+            <div id="pupil"></div>
+        </div>
+    </div>
+
+    <div class="desktop">
+        <div class="icon" onclick="openWindow('win-readme')">
+            <span style="font-size: 40px;">[#]</span>
+            <span>AVISO_SISTEMA</span>
+        </div>
+        <div class="icon" onclick="checkPass()">
+            <span style="font-size: 40px;">[?]</span>
+            <span>DADOS_LOG</span>
+        </div>
+    </div>
+
+    <div id="win-readme" class="window" style="top: 50px; left: 50px;">
+        <div class="title-bar"><span>STATUS: MONITORADO</span><button class="close-btn" onclick="closeWindow('win-readme')">X</button></div>
+        <div style="padding: 15px;">O núcleo detectou sua presença. Não feche os olhos.</div>
+    </div>
+
+    <div id="win-data" class="window" style="top: 150px; left: 150px;">
+        <div class="title-bar"><span>DADOS_RECUPERADOS</span><button class="close-btn" onclick="closeWindow('win-data')">X</button></div>
+        <div style="padding: 15px;">COORDENADAS: 23.5505° S, 46.6333° W.<br>Aguardando comando externo...</div>
+    </div>
+
+
+
+<div class="icon" onclick="openWindow('win-soul')">
+    <span style="font-size: 40px;">📑</span>
+    <span>Weight_of_a_Soul.doc</span>
+</div>
+
+
+<div id="win-soul" class="window" style="top: 30px; left: 300px; width: 450px; height: 400px;">
+    <div class="title-bar">
+        <span>VISUALIZADOR DE TEXTO - v2.0</span>
+        <button class="close-btn" onclick="closeWindow('win-soul')">X</button>
+    </div>
+    <div class="window-content" style="background: #e0e0e0; overflow-y: scroll; font-family: 'Times New Roman', serif;">
+        <h2 style="text-align: center; border-bottom: 1px solid #000;">RELATÓRIO TÉCNICO: EXPERIMENTO o peso da alma, por Duncan MacDougall </h2>
+        <p><b>DATA:</b> █████▓▒░▒▓▒</p>
+        <p><b>ASSUNTO:</b> Mensuração da informação pós-cessação de funções vitais.</p>
+        <hr>
+        <p>Durante os testes realizados com seis pacientes em █████▓▒░▒▓▒, observou-se uma anomalia constante no momento exato da morte clínica. A balança acusou uma perda súbita de aproximadamente <b>21 gramas</b>
+        
+        <p>O que a ciência oficial chama de "Morte", o Projeto Aurora identifica como a <i>█████▓▒░▒▓▒ █████▓▒░▒▓▒</i>. A informação contida no cérebro do individuos é o que causa este peso adicional caso estejam com uma dose minima de █████▓▒░▒▓▒ . É possível, com isso, armazenar as informações.</p>
+
+        <p style="background: #000; color: #000; display: inline;">ESTA LINHA FOI CENSURADA PELA ADMINISTRAÇÃO.</p>
+
+        <p>O "peso da alma" é, nada mais, nada menos, que o peso das informações sendo perdidas. As █████▓▒░▒▓▒ nos permitem deixar estas informações armazenadas em pequenas pedras que apelidamos de "Olho da Tempestade". É o jeito mais eficiente de armazenar informações.</p>
+        
+        <p style="text-align: center; margin-top: 50px; font-style: italic; opacity: 0.5;">[FIM DO RELATÓRIO]</p>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+        // ESTÁTICA DE FUNDO
+        const canvas = document.getElementById('noiseCanvas');
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function noise() {
+            const idata = ctx.createImageData(canvas.width, canvas.height);
+            const buffer32 = new Uint32Array(idata.data.buffer);
+            for (let i = 0; i < buffer32.length; i++) {
+                buffer32[i] = Math.random() < 0.5 ? 0xff000000 : 0xffffffff;
+            }
+            ctx.putImageData(idata, 0, 0);
+            requestAnimationFrame(noise);
+        }
+        noise();
+
+        // GLITCH A CADA 1 MINUTO
+        function triggerGlitch() {
+            const container = document.getElementById('eye-container');
+            container.classList.add('glitch-mode');
+            setTimeout(() => { container.classList.remove('glitch-mode'); }, 2000);
+        }
+        setInterval(triggerGlitch, 20000);
+
+        // FUNÇÕES INTERFACE
+        function openWindow(id) { document.getElementById(id).style.display = 'block'; }
+        function closeWindow(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function checkPass() {
+            let p = prompt("INSIRA O PESO DA MORTE:");
+            if(p === "21 gramas") { openWindow('win-data'); }
+            else { alert("ACESSO NEGADO."); }
+        }
+    </script>
+</body>
+</html>
