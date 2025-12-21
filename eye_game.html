@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DONT_MOVE</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #ff0000;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10;
+        }
+
+        /* AVISO DE PERIGO */
+        .warning-corner {
+            position: fixed; top: 20px; left: 20px;
+            color: red; font-size: 1.5rem; font-weight: bold;
+            border: 2px solid red; padding: 10px;
+            display: none; z-index: 200; background-color: black;
+            animation: flashWarning 0.2s infinite; text-transform: uppercase;
+        }
+        @keyframes flashWarning {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ÁREA DOS OLHOS */
+        .eyes-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 50px;
+            height: 120px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .eye-container {
+            width: 100px; height: 100px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+            animation: popIn 0.5s ease-out;
+        }
+
+        .eye-shape {
+            width: 100%; height: 40px; background: #330000; border-radius: 50%;
+            position: relative; overflow: hidden; border: 2px solid #550000; transition: 0.1s;
+        }
+
+        .pupil {
+            width: 30px; height: 30px; background: #ff0000; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #ff0000; transition: 0.1s;
+        }
+
+        /* ESTADOS DO OLHO */
+        .eye-open .eye-shape {
+            height: 90px; background: #000; border-color: #ff0000; box-shadow: 0 0 20px #ff0000;
+        }
+        .eye-closed .eye-shape {
+            height: 8px; background: #110000; border-color: #330000; box-shadow: none;
+        }
+        .eye-closed .pupil { opacity: 0; }
+
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* BOTÕES DE PROGRESSO */
+        .goals-container {
+            display: none; flex-wrap: wrap; justify-content: center; gap: 30px;
+            width: 80%; margin-top: 100px;
+        }
+
+        .goal-btn {
+            background: #110000; border: 1px solid #440000; color: #660000;
+            padding: 20px 30px; cursor: pointer; font-family: 'Courier New';
+            font-size: 1rem; transition: 0.3s;
+        }
+        .goal-btn:hover { border-color: red; color: red; box-shadow: 0 0 10px #300; }
+        
+        /* Botão Ativado (Seguro) */
+        .goal-btn.activated {
+            border-color: #00ff00; color: #00ff00; background: #001100;
+            pointer-events: none; opacity: 0.5;
+        }
+
+        /* TELA DE START */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 100;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        #btn-start {
+            background: transparent; color: red; border: 2px solid red;
+            padding: 20px 40px; font-size: 1.2rem; font-family: 'Courier New';
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+            letter-spacing: 2px; animation: pulse 2s infinite;
+        }
+        #btn-start:hover { background: red; color: black; box-shadow: 0 0 20px red; }
+
+        /* JUMPSCARE */
+        .jumpscare-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: red; z-index: 999; display: none; mix-blend-mode: multiply;
+        }
+        .glitch-text {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; color: black; background: red;
+            display: none; z-index: 1000; font-weight: bold;
+            text-align: center; width: 100%;
+        }
+
+        .body-shake { animation: shake 0.1s infinite; }
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+        @keyframes shake { 0% { transform: translate(5px, 5px); } 25% { transform: translate(-5px, -5px); } 50% { transform: translate(-5px, 5px); } 75% { transform: translate(5px, -5px); } }
+
+        /* DICA */
+        .safe-zone-start {
+            position: absolute; bottom: 50px; width: 100%; text-align: center;
+            color: #555; font-size: 0.8rem; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="jumpscare-overlay" id="jumpscare"></div>
+    <div class="glitch-text" id="death-text">Eles podem te ver.<br>Não se mova.</div>
+    <div id="warning-text" class="warning-corner">NÃO SE MOVA</div>
+
+    <div id="start-screen">
+        <h1 style="text-shadow: 2px 0 blue;">Não se mova.</h1>
+        <p style="margin-bottom: 40px; opacity: 0.7;">Eles podem te ver.</p>
+        <button id="btn-start" onclick="startGame()">Eles querem Você.</button>
+    </div>
+
+    <div class="eyes-row" id="eyes-wrapper"></div>
+
+    <div class="goals-container" id="goals">
+        <button class="goal-btn" onclick="activateNode(this)">DESBLOQUEAR_NÓ_01</button>
+        <button class="goal-btn" onclick="activateNode(this)">DESBLOQUEAR_NÓ_02</button>
+        <button class="goal-btn" onclick="activateNode(this)">DESBLOQUEAR_NÓ_03</button>
+        <button class="goal-btn" onclick="activateNode(this)">DESBLOQUEAR_NÓ_04</button>
+    </div>
+
+    <div class="safe-zone-start" id="start-hint">
+        [ ATIVE TODOS OS NÓS ]
+    </div>
+
+    <script>
+        let isGameRunning = false;
+        let deathTriggered = false;
+        let activeEyesCount = 0; // Quantos olhos estão ABERTOS neste exato momento
+        let eyesList = []; // Lista de objetos para controlar cada olho
+        let nodesActivated = 0;
+
+        const warningText = document.getElementById('warning-text');
+        const eyesWrapper = document.getElementById('eyes-wrapper');
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('goals').style.display = 'flex';
+            document.getElementById('start-hint').style.display = 'block';
+            
+            isGameRunning = true;
+            
+            // Começa com 1 olho
+            spawnEye();
+        }
+
+        // --- LÓGICA DE SPAWN DE OLHOS ---
+        function spawnEye() {
+            const eyeEl = document.createElement('div');
+            eyeEl.className = 'eye-container eye-closed';
+            eyeEl.innerHTML = '<div class="eye-shape"><div class="pupil"></div></div>';
+            eyesWrapper.appendChild(eyeEl);
+
+            // Cria um objeto de controle para este olho
+            const eyeObj = {
+                element: eyeEl,
+                isOpen: false,
+                id: eyesList.length
+            };
+
+            eyesList.push(eyeObj);
+            
+            // Inicia o ciclo independente deste olho
+            runEyeCycle(eyeObj);
+        }
+
+        // --- CICLO DE VIDA DO OLHO (Individual) ---
+        function runEyeCycle(eyeObj) {
+            if (!isGameRunning || deathTriggered) return;
+
+            // Tempo fechado (Seguro): 2 a 4.5 segundos (Para dar chance)
+            const closedTime = Math.random() * 2500 + 2000;
+
+            // Garante que fecha
+            setEyeState(eyeObj, false);
+
+            setTimeout(() => {
+                if (!isGameRunning || deathTriggered) return;
+
+                // Tempo aberto (Perigo): 1.5 a 3 segundos
+                const openTime = Math.random() * 1500 + 1500;
+                
+                setEyeState(eyeObj, true);
+
+                setTimeout(() => {
+                    runEyeCycle(eyeObj); // Repete
+                }, openTime);
+
+            }, closedTime);
+        }
+
+        function setEyeState(eyeObj, isOpen) {
+            if (isOpen) {
+                if (!eyeObj.isOpen) {
+                    eyeObj.isOpen = true;
+                    eyeObj.element.classList.remove('eye-closed');
+                    eyeObj.element.classList.add('eye-open');
+                    activeEyesCount++;
+                }
+            } else {
+                if (eyeObj.isOpen) {
+                    eyeObj.isOpen = false;
+                    eyeObj.element.classList.remove('eye-open');
+                    eyeObj.element.classList.add('eye-closed');
+                    activeEyesCount--;
+                }
+            }
+            updateWarning();
+        }
+
+        // --- ATUALIZA AVISO ---
+        function updateWarning() {
+            if (activeEyesCount > 0) {
+                warningText.style.display = "block";
+            } else {
+                warningText.style.display = "none";
+            }
+        }
+
+        // --- INTERAÇÃO DO JOGADOR ---
+        function activateNode(btn) {
+            // Se tentar clicar enquanto alguém olha, morre
+            if (activeEyesCount > 0) {
+                triggerDeath();
+                return;
+            }
+
+            // Sucesso no clique
+            btn.classList.add('activated');
+            btn.innerText = "NÓ_ATIVO";
+            nodesActivated++;
+
+            // Adiciona mais um olho para dificultar
+            spawnEye();
+
+            // Checa vitória (4 botões + 1 inicial = 5 olhos totais ao final)
+            if (nodesActivated === 4) {
+                winGame();
+            }
+        }
+
+        // --- DETECÇÃO DE MORTE ---
+        document.addEventListener('mousemove', () => {
+            if (!isGameRunning || deathTriggered) return;
+            if (activeEyesCount > 0) {
+                triggerDeath();
+            }
+        });
+
+        function triggerDeath() {
+            deathTriggered = true;
+            isGameRunning = false;
+            warningText.style.display = "none";
+
+            document.body.classList.add('body-shake');
+            document.getElementById('jumpscare').style.display = 'block';
+            document.getElementById('death-text').style.display = 'block';
+            
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                document.body.style.filter = flashCount % 2 === 0 ? "invert(1)" : "invert(0)";
+                flashCount++;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(flashInterval);
+                location.reload();
+            }, 2000);
+        }
+
+        // --- VITÓRIA ---
+        function winGame() {
+            isGameRunning = false;
+            // Para todos os timeouts (grosseiramente, parando o estado visual)
+            
+            document.body.innerHTML = '';
+            document.body.style.backgroundColor = 'black';
+            document.body.style.cursor = 'default';
+
+            const msg = document.createElement('div');
+            msg.style.color = 'red';
+            msg.style.marginTop = '20%';
+            msg.style.textAlign = 'center';
+            msg.style.fontFamily = 'Courier New';
+            // AQUI ESTÁ O LOGIN
+            msg.innerHTML = "<h1>Um Sonho Sobre Sonhar.</h1><br><p style='font-size: 2rem'>LOGIN: <strong>Hell</strong></p><p>Redirecionando para Desktop...</p>";
+            document.body.appendChild(msg);
+
+            setTimeout(() => {
+                window.location.href = "DEsktoP.html"; // Vai para a área do puzzle de senha
+            }, 10000);
+        }
+
+    </script>
+</body>
+</html>
