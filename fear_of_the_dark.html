@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>THE_WATCHER_VHS</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #101010;
+            font-family: 'Courier New', monospace;
+            cursor: none;
+            user-select: none;
+        }
+
+        /* === EFEITOS CRT / VHS === */
+        #screen-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+
+        /* Classe ativada na morte para bugar a tela */
+        .vhs-failure {
+            animation: glitch-anim 0.2s infinite;
+            filter: contrast(200%) brightness(150%) hue-rotate(90deg);
+        }
+
+        .tv-off {
+            animation: turn-off 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); filter: hue-rotate(0deg); }
+            40% { transform: translate(-5px, -5px); filter: hue-rotate(90deg); }
+            60% { transform: translate(5px, 5px); filter: invert(0.2); }
+            80% { transform: translate(5px, -5px); filter: hue-rotate(-90deg); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes turn-off {
+            0% { transform: scale(1, 1.3) translate3d(0, 0, 0); filter: brightness(1); opacity: 1; }
+            60% { transform: scale(1, 0.001) translate3d(0, 0, 0); filter: brightness(10); }
+            100% { transform: scale(0, 0.001) translate3d(0, 0, 0); filter: brightness(0); opacity: 0; }
+        }
+
+        /* HUD */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 50;
+        }
+
+        #clock {
+            position: absolute; top: 20px; left: 20px;
+            font-size: 3rem; color: #fff; font-weight: bold;
+            text-shadow: 2px 2px red, -2px -2px blue; /* Aberração cromática */
+        }
+
+        .bar-container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 300px; text-align: center;
+        }
+        .bar-border {
+            width: 100%; height: 20px; border: 2px solid #555; background: #000; margin-top: 5px;
+        }
+        #battery-fill {
+            width: 100%; height: 100%; background: #ffea00;
+            box-shadow: 0 0 10px #ffea00; transition: width 0.1s;
+        }
+
+        /* Contador de Olhos */
+        .panic-container {
+            position: absolute; top: 20px; right: 20px;
+            width: 250px; text-align: right;
+        }
+        #eye-count-text { color: red; font-weight: bold; font-size: 1.5rem; text-shadow: 0 0 10px red; }
+        
+        #panic-fill {
+            width: 0%; height: 100%; background: #ff0000;
+            box-shadow: 0 0 10px #ff0000; transition: width 0.1s linear;
+        }
+
+        /* Telas */
+        #game-over, #victory, #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 60; cursor: default;
+        }
+        
+        #start-screen { background: rgba(0,0,0,0.95); color: white; }
+        #game-over { display: none; background: transparent; } /* Fundo transparente pois o canvas bugado será o fundo */
+        #victory { background: white; color: black; display: none; }
+        
+        button {
+            background: black; border: 2px solid white; color: white;
+            padding: 15px 30px; font-family: 'Courier New'; font-size: 1.2rem;
+            cursor: pointer; margin-top: 20px; transition: 0.3s;
+            text-transform: uppercase;
+        }
+        button:hover { background: white; color: black; }
+
+        .password { font-size: 4rem; font-weight: bold; border-bottom: 4px solid black; margin: 20px 0; }
+        
+        /* Mensagem de Erro VHS */
+        .error-msg-vhs {
+            background: blue; color: white; padding: 20px;
+            font-size: 1.5rem; font-weight: bold;
+            box-shadow: 10px 10px 0px black;
+            text-align: center;
+        }
+
+        canvas { display: block; filter: contrast(120%) brightness(90%); }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-layer"></div> <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="clock">00:00</div>
+        
+        <div class="panic-container">
+            <div class="label" style="color: red; text-shadow: 1px 0 blue;">OLHOS: <span id="eye-count-text">0/10</span></div>
+            <div class="bar-border" style="border-color: #500;">
+                <div id="panic-fill"></div>
+            </div>
+            <div class="label" style="font-size: 0.6rem; margin-top: 5px; color: #888;">Chegue a 10 e fim.</div>
+        </div>
+
+        <div class="bar-container">
+            <div class="label" style="color: #aaa;">[ESPAÇO] TRAGA A LUZ</div>
+            <div class="bar-border">
+                <div id="battery-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <h1 style="color: white; text-shadow: 2px 0 red, -2px 0 blue;">Eu tenho medo do escuro...</h1>
+        <p>Então me ajude.</p>
+        <p>A noite será longa,</p>
+        <p style="color: #ff5555;">Por isso, me proteja.</p>
+        <p>A Lanterna é nossa única esperança</p>
+        <p>Neste Inferno.</p>
+        <button onclick="startGame()">Proteja a pequena Helena</button>
+    </div>
+
+    <div id="game-over">
+        <div class="error-msg-vhs">
+            FATAL ERROR<br>
+            SIGNAL LOST<br><br>
+            <span id="death-reason" style="font-size: 1rem;">UNKNOWN</span>
+        </div>
+        <button onclick="location.reload()" style="border-color: red; color: red; background: black;">REINICIAR SISTEMA</button>
+    </div>
+
+    <div id="victory">
+        <h1>Eu odeio isso.</h1>
+        <p>Senha:</p>
+        <div class="password">HEAVEN</div>
+        <p style="font-size: 0.8rem;">(O Abismo te aguarda)</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI
+        const elClock = document.getElementById('clock');
+        const elBattery = document.getElementById('battery-fill');
+        const elPanic = document.getElementById('panic-fill');
+        const elEyeCount = document.getElementById('eye-count-text');
+        
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const victoryScreen = document.getElementById('victory');
+        const uiLayer = document.getElementById('ui-layer');
+
+        // Configurações
+        let width, height;
+        let mouseX = 0, mouseY = 0;
+        let isRunning = false;
+        
+        // Variáveis de Jogo
+        const GAME_DURATION = 60; 
+        let gameTime = 0; 
+        
+        let battery = 100;
+        const batteryDrain = 0.35; 
+        const batteryRecharge = 5; 
+        let isSpacePressed = false;
+
+        const MAX_EYES = 10;
+        let eyes = [];
+        let particles = []; 
+        let frameCount = 0;
+
+        // Setup
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        document.addEventListener('keydown', e => { if(e.code === 'Space') isSpacePressed = true; });
+        document.addEventListener('keyup', e => { if(e.code === 'Space') isSpacePressed = false; });
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            isRunning = true;
+            
+            // COMEÇA COM VÁRIOS OLHOS
+            for(let i=0; i<4; i++) spawnEye();
+
+            loop();
+        }
+
+        function loop() {
+            if(!isRunning) return;
+            requestAnimationFrame(loop);
+            frameCount++;
+            update();
+            draw();
+        }
+
+        function update() {
+            gameTime += 1/60; 
+            if(gameTime >= GAME_DURATION) {
+                winGame();
+                return;
+            }
+
+            // Relógio
+            let hours = Math.floor((gameTime / GAME_DURATION) * 6);
+            let minutes = Math.floor(((gameTime / GAME_DURATION) * 6 * 60) % 60);
+            elClock.innerText = `0${hours}:${minutes < 10 ? '0'+minutes : minutes}`;
+
+            // Bateria
+            if(isSpacePressed) battery = Math.min(100, battery + batteryRecharge);
+            else battery = Math.max(0, battery - batteryDrain);
+            
+            elBattery.style.width = battery + '%';
+            if(battery < 20) elBattery.style.backgroundColor = 'red';
+            else elBattery.style.backgroundColor = '#ffea00';
+
+            // Contagem de Olhos (Derrota)
+            let eyeCount = eyes.length;
+            elEyeCount.innerText = `${eyeCount}/${MAX_EYES}`;
+            let panicPerc = (eyeCount / MAX_EYES) * 100;
+            elPanic.style.width = panicPerc + '%';
+
+            if(eyeCount >= MAX_EYES) {
+                loseGame("SYSTEM OVERLOAD: MANY EYES");
+                return;
+            }
+
+            // SPAWN CONSTANTE E AGRESSIVO
+            // Começa rápido (30 frames = 0.5s) e termina insanamente rápido (10 frames)
+            let spawnDelay = Math.max(10, 30 - (gameTime * 0.3)); 
+            
+            if(frameCount % Math.floor(spawnDelay) === 0) {
+                spawnEye();
+            }
+
+            // Atualiza Olhos
+            for (let i = eyes.length - 1; i >= 0; i--) {
+                let eye = eyes[i];
+                let dx = mouseX - eye.x;
+                let dy = mouseY - eye.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+
+                // Dano mais forte (Raio 170px, Dano 6)
+                if(battery > 0 && dist < 170) {
+                    eye.life -= 6; 
+                    eye.scale = 1.4; // Feedback visual forte
+
+                    if(eye.life <= 0) {
+                        createExplosion(eye.x, eye.y);
+                        eyes.splice(i, 1);
+                    }
+                } else {
+                    eye.scale = 1;
+                    // Olhos tremem levemente para dar agonia
+                    eye.x += (Math.random() - 0.5) * 2;
+                    eye.y += (Math.random() - 0.5) * 2;
+                }
+            }
+
+            // Atualiza Partículas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                if(p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function draw() {
+            // Efeito de Rastro (Motion Blur)
+            ctx.fillStyle = 'rgba(10, 5, 5, 0.4)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Desenhar Olhos
+            eyes.forEach(eye => {
+                ctx.save();
+                ctx.translate(eye.x, eye.y);
+                ctx.scale(eye.scale, eye.scale);
+                
+                // Brilho intenso
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = '#ff0000';
+                
+                // Esclera
+                ctx.fillStyle = '#400';
+                ctx.beginPath();
+                ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupila Vertical (Gato/Monstro)
+                ctx.fillStyle = '#f00';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 8, 20, 0, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+
+            // Partículas
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+
+            // A LUZ
+            if(battery > 0) {
+                let gradient = ctx.createRadialGradient(mouseX, mouseY, 20, mouseX, mouseY, 300);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)'); 
+                gradient.addColorStop(0.3, 'rgba(200, 200, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.globalCompositeOperation = 'screen'; 
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, 300, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            }
+        }
+
+        function spawnEye() {
+            // Nasce longe do mouse
+            let x, y, dist;
+            do {
+                x = Math.random() * (width - 100) + 50;
+                y = Math.random() * (height - 100) + 50;
+                let dx = mouseX - x;
+                let dy = mouseY - y;
+                dist = Math.sqrt(dx*dx + dy*dy);
+            } while(dist < 300); // Distância mínima maior para não nascer morrendo
+
+            eyes.push({
+                x: x, y: y,
+                life: 30, // Vida do olho
+                scale: 1
+            });
+        }
+
+        function createExplosion(x, y) {
+            for(let i=0; i<15; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    life: 1,
+                    size: Math.random() * 4 + 1
+                });
+            }
+        }
+
+        function loseGame(reason) {
+            isRunning = false;
+            document.getElementById('death-reason').innerText = reason;
+            
+            // ATIVA O GLITCH VISUAL NO CORPO
+            document.body.classList.add('vhs-failure');
+            uiLayer.style.display = 'none'; // Some a interface normal
+
+            // Mostra a tela de erro com delay leve
+            setTimeout(() => {
+                gameOverScreen.style.display = 'flex';
+            }, 500);
+
+            // Efeito de TV desligando no final
+            setTimeout(() => {
+               document.body.classList.add('tv-off');
+            }, 3000);
+        }
+
+        function winGame() {
+            isRunning = false;
+            victoryScreen.style.display = 'flex';
+        }
+
+    </script>
+</body>
+</html>
