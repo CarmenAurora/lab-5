@@ -12,15 +12,15 @@
         /* O OLHO GIGANTE PIXELADO HORIZONTAL */
         #eye-container {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 80vw; height: 40vh; /* Ocupa quase a tela toda */
+            width: 80vw; height: 40vh;
             display: flex; align-items: center; justify-content: center; z-index: 0;
         }
 
         #pixel-eye {
             width: 100%; height: 100%;
-            background: #400; /* Vermelho escuro profundo */
-            border-radius: 100% 0%; /* Formato amendoado horizontal */
-            transform: rotate(-45deg); /* Ajuste para ficar horizontal */
+            background: #400;
+            border-radius: 100% 0%;
+            transform: rotate(-45deg);
             box-shadow: 
                 0 0 0 10px #600, 
                 0 0 80px 20px rgba(255, 0, 0, 0.2);
@@ -29,18 +29,17 @@
             border: 8px solid #200;
         }
 
-        /* PUPILA PIXELADA ENCARANDO */
         #pupil {
             position: absolute;
             width: 15%; height: 30%;
             background: #000;
             top: 35%; left: 35%;
-            transform: rotate(45deg); /* Compensa a rotação do olho */
+            transform: rotate(45deg);
             box-shadow: 0 0 20px 5px red;
             animation: lookAround 10s infinite;
         }
 
-        /* ANIMAÇÃO DE GLITCH (1 MINUTO) */
+        /* ANIMAÇÃO DE GLITCH */
         .glitch-mode { animation: flash 0.2s steps(1) infinite; }
         @keyframes flash {
             0% { filter: invert(1) hue-rotate(90deg); transform: translate(-50%, -50%) scale(1.1); }
@@ -56,31 +55,46 @@
 
         /* DESKTOP E INTERFACE */
         .desktop { position: relative; z-index: 10; display: grid; grid-template-columns: repeat(auto-fill, 110px); grid-gap: 20px; padding: 30px; }
-        .icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #ff0000; text-align: center; font-size: 11px; font-weight: bold; }
-        .window { position: absolute; width: 300px; background: #222; border: 2px solid red; display: none; z-index: 100; color: #ff4444; box-shadow: 10px 10px 0 #000; }
+        
+        .icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #ff0000; text-align: center; font-size: 11px; font-weight: bold; transition: 0.2s; }
+        .icon:hover { transform: scale(1.1); text-shadow: 0 0 5px red; }
+
+        .window { 
+            position: absolute; width: 300px; background: #222; border: 2px solid red; 
+            display: none; z-index: 100; color: #ff4444; box-shadow: 10px 10px 0 #000; 
+        }
+        
         .title-bar { background: red; color: black; padding: 4px; font-weight: bold; display: flex; justify-content: space-between; font-size: 10px; }
         .close-btn { background: black; color: red; border: 1px solid red; cursor: pointer; }
-   
+        
+        .window-content {
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
 
+        .window-content::-webkit-scrollbar { width: 15px; }
+        .window-content::-webkit-scrollbar-track { background: #808080; }
+        .window-content::-webkit-scrollbar-thumb { 
+            background: #c0c0c0; border: 2px solid #fff; border-right-color: #444; border-bottom-color: #444; 
+        }
 
-.window-content::-webkit-scrollbar {
-    width: 15px;
-}
-.window-content::-webkit-scrollbar-track {
-    background: #808080;
-}
-.window-content::-webkit-scrollbar-thumb {
-    background: #c0c0c0;
-    border: 2px solid #fff;
-    border-right-color: #444;
-    border-bottom-color: #444;
-}
+        input[type="text"] {
+            background: #000; border: 1px solid red; color: red; padding: 5px; width: 80%; font-family: 'Courier New'; outline: none;
+        }
+        button.action-btn {
+            background: #300; color: red; border: 1px solid red; padding: 5px 10px; cursor: pointer; margin-top: 10px; font-family: 'Courier New';
+        }
+        button.action-btn:hover { background: red; color: black; }
 
+        /* Estilo especial para a janela da Borboleta */
+        #win-butterfly { border-color: #ffea00; color: #ffea00; }
+        #win-butterfly .title-bar { background: #330; color: #ffea00; }
+        #win-butterfly input { border-color: #ffea00; color: #ffea00; }
+        #win-butterfly button { border-color: #ffea00; color: #ffea00; background: #220; }
+        #win-butterfly button:hover { background: #ffea00; color: black; }
 
-
-
-
- </style>
+    </style>
 </head>
 
 <body>
@@ -97,63 +111,81 @@
             <span style="font-size: 40px;">[#]</span>
             <span>AVISO_SISTEMA</span>
         </div>
-        <div class="icon" onclick="checkPass()">
+        
+        <div class="icon" onclick="openWindow('win-login')">
             <span style="font-size: 40px;">[?]</span>
             <span>DADOS_LOG</span>
+        </div>
+
+        <div class="icon" onclick="openWindow('win-soul')">
+            <span style="font-size: 40px;">📑</span>
+            <span>Weight_of_a_Soul.doc</span>
+        </div>
+
+        <div class="icon" onclick="openWindow('win-butterfly')">
+            <span style="font-size: 40px;">🦋</span>
+            <span style="color: #ffea00;">BORBOLETA.log</span>
         </div>
     </div>
 
     <div id="win-readme" class="window" style="top: 50px; left: 50px;">
         <div class="title-bar"><span>STATUS: MONITORADO</span><button class="close-btn" onclick="closeWindow('win-readme')">X</button></div>
-        <div style="padding: 15px;">O núcleo detectou sua presença. Não feche os olhos.</div>
+        <div class="window-content">O núcleo detectou sua presença.</div>
     </div>
 
-    <div id="win-data" class="window" style="top: 150px; left: 150px;">
-        <div class="title-bar"><span>DADOS_RECUPERADOS</span><button class="close-btn" onclick="closeWindow('win-data')">X</button></div>
-        <div style="padding: 15px;">COORDENADAS: 23.5505° S, 46.6333° W.<br>Aguardando comando externo...</div>
+    <div id="win-login" class="window" style="top: 150px; left: 150px;">
+        <div class="title-bar"><span>ACESSO RESTRITO</span><button class="close-btn" onclick="closeWindow('win-login')">X</button></div>
+        <div class="window-content" style="text-align: center;">
+            <p>INSIRA O PESO DA MORTE:</p>
+            <input type="text" id="pass-input" placeholder="...">
+            <button class="action-btn" onclick="checkPass()">VERIFICAR</button>
+            <p id="login-error" style="display:none; color: yellow; font-size: 10px; margin-top: 5px;">ACESSO NEGADO</p>
+        </div>
     </div>
 
-
-
-<div class="icon" onclick="openWindow('win-soul')">
-    <span style="font-size: 40px;">📑</span>
-    <span>Weight_of_a_Soul.doc</span>
-</div>
-
-
-<div id="win-soul" class="window" style="top: 30px; left: 300px; width: 450px; height: 400px;">
-    <div class="title-bar">
-        <span>VISUALIZADOR DE TEXTO - v2.0</span>
-        <button class="close-btn" onclick="closeWindow('win-soul')">X</button>
+    <div id="win-soul" class="window" style="top: 30px; left: 300px; width: 450px;">
+        <div class="title-bar">
+            <span>VISUALIZADOR DE TEXTO - v2.0</span>
+            <button class="close-btn" onclick="closeWindow('win-soul')">X</button>
+        </div>
+        <div class="window-content" style="background: #e0e0e0; font-family: 'Times New Roman', serif; color: black; height: 350px;">
+            <h2 style="text-align: center; border-bottom: 1px solid #000;">RELATÓRIO TÉCNICO: EXPERIMENTO o peso da alma, por Duncan MacDougall </h2>
+            <p><b>DATA:</b> █████▓▒░▒▓▒</p>
+            <p><b>ASSUNTO:</b> Mensuração da informação pós-cessação de funções vitais.</p>
+            <hr>
+            <p>Durante os testes realizados com seis pacientes em █████▓▒░▒▓▒, observou-se uma anomalia constante no momento exato da morte clínica. A balança acusou uma perda súbita de aproximadamente <b>21 gramas</b></p>
+            
+            <p>O que a ciência oficial chama de "Morte", o Projeto Aurora identifica como a <i>█████▓▒░▒▓▒ █████▓▒░▒▓▒</i>. A informação contida no cérebro do individuos é o que causa este peso adicional caso estejam com uma dose minima de █████▓▒░▒▓▒ . É possível, com isso, armazenar as informações.</p>
+    
+            <p style="background: #000; color: #000; display: inline;">ESTA LINHA FOI CENSURADA PELA ADMINISTRAÇÃO.</p>
+    
+            <p>O "peso da alma" é, nada mais, nada menos, que o peso das informações sendo perdidas. As █████▓▒░▒▓▒ nos permitem deixar estas informações armazenadas em pequenas pedras que apelidamos de "Olho da Tempestade". É o jeito mais eficiente de armazenar informações.</p>
+            
+            <p style="text-align: center; margin-top: 50px; font-style: italic; opacity: 0.5;">[FIM DO RELATÓRIO]</p>
+        </div>
     </div>
-    <div class="window-content" style="background: #e0e0e0; overflow-y: scroll; font-family: 'Times New Roman', serif;">
-        <h2 style="text-align: center; border-bottom: 1px solid #000;">RELATÓRIO TÉCNICO: EXPERIMENTO o peso da alma, por Duncan MacDougall </h2>
-        <p><b>DATA:</b> █████▓▒░▒▓▒</p>
-        <p><b>ASSUNTO:</b> Mensuração da informação pós-cessação de funções vitais.</p>
-        <hr>
-        <p>Durante os testes realizados com seis pacientes em █████▓▒░▒▓▒, observou-se uma anomalia constante no momento exato da morte clínica. A balança acusou uma perda súbita de aproximadamente <b>21 gramas</b>
-        
-        <p>O que a ciência oficial chama de "Morte", o Projeto Aurora identifica como a <i>█████▓▒░▒▓▒ █████▓▒░▒▓▒</i>. A informação contida no cérebro do individuos é o que causa este peso adicional caso estejam com uma dose minima de █████▓▒░▒▓▒ . É possível, com isso, armazenar as informações.</p>
 
-        <p style="background: #000; color: #000; display: inline;">ESTA LINHA FOI CENSURADA PELA ADMINISTRAÇÃO.</p>
-
-        <p>O "peso da alma" é, nada mais, nada menos, que o peso das informações sendo perdidas. As █████▓▒░▒▓▒ nos permitem deixar estas informações armazenadas em pequenas pedras que apelidamos de "Olho da Tempestade". É o jeito mais eficiente de armazenar informações.</p>
-        
-        <p style="text-align: center; margin-top: 50px; font-style: italic; opacity: 0.5;">[FIM DO RELATÓRIO]</p>
+    <div id="win-butterfly" class="window" style="top: 200px; left: 400px; width: 320px;">
+        <div class="title-bar">
+            <span style="color: #ffea00;">ENTIDADE_DESCONHECIDA</span>
+            <button class="close-btn" onclick="closeWindow('win-butterfly')">X</button>
+        </div>
+        <div class="window-content" style="text-align: center;">
+            <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                "A Borboleta não sabia voar.<br>
+                E você, não entende.<br>
+                Leia de novo, mas apenas a parte que importa."
+            </p>
+            <input type="text" id="butterfly-input" placeholder="Escreva a frase...">
+            <button class="action-btn" onclick="checkButterfly()">ENTREGAR</button>
+            <p id="butterfly-error" style="display:none; color: red; font-size: 10px; margin-top: 5px;">VOCÊ NÃO ENTENDEU</p>
+        </div>
     </div>
-</div>
 
+    <script>
+        // --- CONFIGURAÇÃO DE SENHAS ---
+        const ANSWER_BUTTERFLY = "uma pequena borboleta que tinha um sonho"; // Mude aqui se a resposta for outra
 
-
-
-
-
-
-
-
-
-
-<script>
         // ESTÁTICA DE FUNDO
         const canvas = document.getElementById('noiseCanvas');
         const ctx = canvas.getContext('2d');
@@ -172,7 +204,7 @@
         }
         noise();
 
-        // GLITCH A CADA 1 MINUTO
+        // GLITCH A CADA 20 SEGUNDOS
         function triggerGlitch() {
             const container = document.getElementById('eye-container');
             container.classList.add('glitch-mode');
@@ -181,14 +213,56 @@
         setInterval(triggerGlitch, 20000);
 
         // FUNÇÕES INTERFACE
-        function openWindow(id) { document.getElementById(id).style.display = 'block'; }
-        function closeWindow(id) { document.getElementById(id).style.display = 'none'; }
-        
-        function checkPass() {
-            let p = prompt("INSIRA O PESO DA MORTE:");
-            if(p === "21 gramas") { openWindow('win-data'); }
-            else { alert("ACESSO NEGADO."); }
+        function openWindow(id) { 
+            document.querySelectorAll('.window').forEach(w => w.style.display = 'none');
+            document.getElementById(id).style.display = 'block'; 
+            
+            // Foca no input se houver
+            const win = document.getElementById(id);
+            const inp = win.querySelector('input');
+            if(inp) inp.focus();
         }
+        
+        function closeWindow(id) { 
+            document.getElementById(id).style.display = 'none'; 
+        }
+        
+        // LOGIN: 21 GRAMAS
+        function checkPass() {
+            const input = document.getElementById('pass-input');
+            const errorMsg = document.getElementById('login-error');
+            
+            if(input.value.toLowerCase().trim() === "21 gramas") { 
+                window.location.href = "eye_game.html"; 
+            } else { 
+                errorMsg.style.display = 'block';
+                input.value = ""; 
+            }
+        }
+
+        // LOGIN: BORBOLETA
+        function checkButterfly() {
+            const input = document.getElementById('butterfly-input');
+            const errorMsg = document.getElementById('butterfly-error');
+            
+            if(input.value.toLowerCase().trim() === ANSWER_BUTTERFLY.toLowerCase()) { 
+                document.body.style.filter = "invert(1)"; // Efeito visual de transição
+                setTimeout(() => {
+                    window.location.href = "fear_of_the_dark.html"; 
+                }, 500);
+            } else { 
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // Enter Keys
+        document.getElementById('pass-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPass();
+        });
+        document.getElementById('butterfly-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkButterfly();
+        });
+
     </script>
 </body>
 </html>
